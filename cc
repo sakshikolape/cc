@@ -203,7 +203,6 @@ public class EvenOddServer{
       }
    }
 }
-
 Code for EvenOddClient
 import java.io.*;
 import java.net.*;
