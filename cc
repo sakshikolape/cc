@@ -530,6 +530,92 @@ public class ClientConvert {
     }
 }
 
+Calculator..UDP
+
+server:
+import java.io.IOException;
+import java.net.*;
+
+public class CalcServerUDP {
+    public static void main(String[] args) throws IOException {
+        DatagramSocket server = new DatagramSocket(9876);
+        byte[] r = new byte[1024], s;
+
+        System.out.println("UDP Calculator Server running...");
+
+        while (true) {
+            DatagramPacket rp = new DatagramPacket(r, r.length);
+            server.receive(rp);
+
+            String req = new String(rp.getData(), 0, rp.getLength());
+            System.out.println("Client: " + req);
+
+            String result = calculate(req);
+            s = result.getBytes();
+
+            DatagramPacket sp = new DatagramPacket(s, s.length, rp.getAddress(), rp.getPort());
+            server.send(sp);
+        }
+    }
+
+    private static String calculate(String exp) {
+        try {
+            String[] p = exp.split(" ");
+            if (p.length != 3) return "Use: num1 op num2";
+
+            double a = Double.parseDouble(p[0]);
+            double b = Double.parseDouble(p[2]);
+            String op = p[1];
+
+            switch (op) {
+                case "+": return String.valueOf(a + b);
+                case "-": return String.valueOf(a - b);
+                case "*": return String.valueOf(a * b);
+                case "/": return (b == 0) ? "Division by zero" : String.valueOf(a / b);
+                default:  return "Invalid operator";
+            }
+        } catch (Exception e) {
+            return "Error";
+        }
+    }
+}
+
+Client: 
+import java.io.IOException;
+import java.net.*;
+import java.util.Scanner;
+
+public class CalcClientUDP {
+    public static void main(String[] args) throws IOException {
+        DatagramSocket client = new DatagramSocket();
+        InetAddress addr = InetAddress.getByName("localhost");
+        Scanner sc = new Scanner(System.in);
+
+        byte[] send, receive = new byte[1024];
+
+        while (true) {
+            System.out.print("Enter calculation (e.g., '5 + 3') or 'exit': ");
+            String msg = sc.nextLine();
+
+            if (msg.equalsIgnoreCase("exit"))
+                break;
+
+            send = msg.getBytes();
+            DatagramPacket sp = new DatagramPacket(send, send.length, addr, 9876);
+            client.send(sp);
+
+            DatagramPacket rp = new DatagramPacket(receive, receive.length);
+            client.receive(rp);
+
+            String res = new String(rp.getData(), 0, rp.getLength());
+            System.out.println("Result: " + res);
+        }
+
+        client.close();
+        sc.close();
+    }
+}
+
  
  
  
